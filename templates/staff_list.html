@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container my-5">
+  <h2 class="text-center mb-4">Staff List</h2>
+
+  <table class="table table-bordered table-striped">
+    <thead class="table-dark">
+      <tr>
+        <th>No</th>
+        <th>Username</th>
+        <th>Date Joined</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in staff_users %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ user.username }}</td>
+        <td>{{ user.date_joined|date:"Y-m-d" }}</td>
+        
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="4" class="text-center">No staff registered yet.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      font-family: "Arial", sans-serif;
+      font-size: 12px;
+      padding: 20px;
+    }
+    table, td {
+      border-collapse: collapse;
+    }
+    .header, .footer {
+      text-align: center;
+      font-weight: bold;
+    }
+    .section {
+      margin-bottom: 10px;
+    }
+    .line {
+      border-bottom: 1px solid black;
+      display: inline-block;
+      min-width: 100px;
+    }
+    .form-table td {
+      padding: 3px 5px;
+      vertical-align: top;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  SUGAR CORPORATION OF UGANDA LTD - LUGAZI<br>
+  APPLICATION FOR LEAVE FROM EMPLOYEE
+</div>
+
+<br>
+
+<table class="form-table">
+  <tr>
+    <td><strong>Department Section:</strong></td>
+    <td>{{ leave.employee.department }}</td>
+    <td><strong>Form Serial No:</strong></td>
+    <td>{{ leave.id|stringformat:"03d" }}</td>
+  </tr>
+  <tr>
+    <td><strong>Name of Employee:</strong></td>
+    <td>{{ leave.employee.employee_name }}</td>
+    <td><strong>Date:</strong></td>
+    <td>{{ leave.created_at|date:"d-M-Y" }}</td>
+  </tr>
+  <tr>
+    <td><strong>Designation:</strong></td>
+    <td>{{ leave.employee.designation }}</td>
+    <td><strong>Emp No:</strong></td>
+    <td>{{ leave.employee.employee_code }}</td>
+  </tr>
+  <tr>
+    <td><strong>Leave Days (Balance):</strong></td>
+    <td>{{ leave.employee.current_total_days }}</td>
+    <td><strong>As of Date:</strong></td>
+    <td>{{ leave.created_at|date:"d-M-Y" }}</td>
+  </tr>
+  <tr>
+    <td><strong>Period From:</strong></td>
+    <td>{{ leave.start_date|date:"d-M-Y" }}</td>
+    <td><strong>To:</strong></td>
+    <td>{{ leave.end_date|date:"d-M-Y" }}</td>
+  </tr>
+  <tr>
+    <td><strong>Total Days:</strong></td>
+    <td colspan="3">{{ leave.days_required }} day(s)</td>
+  </tr>
+</table>
+
+<br>
+<tr>
+   <td> <strong>Leave Recommended:</strong></td>
+   <td colspan="3">{{ leave.recommendation }}</td>
+  
+</tr>
+<br>
+
+<div class="header">FOR CRO USE</div>
+
+<table class="form-table">
+  <tr>
+    <td><strong>Receiving Person:</strong></td>
+    <td>{{ leave.employee.employee_name }}</td>
+    <td><strong>Date:</strong></td>
+    <td>{{ leave.created_at|date:"d-M-Y" }}</td>
+  </tr>
+  <tr>
+    <td><strong>Entered by:</strong></td>
+    <td>{{ leave.created_by.username }}</td>
+    <td><strong>Current Leave Balance:</strong></td>
+    <td>{{ leave.balance_days }}</td>
+  </tr>
+</table>
+
+</body>
+</html>

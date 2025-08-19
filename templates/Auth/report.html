@@ -1,0 +1,483 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+  body {
+    font-family: 'Times New Roman', Times, serif;
+    color: #333333;
+  }
+  h3 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #003087;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+  .table thead th {
+    background-color: #E8F0FE;
+    color: #003087;
+    font-weight: bold;
+    font-size: 0.9rem;
+    padding: 0.5rem;
+    border: 1px solid #999999;
+    text-align: center;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .table tbody td {
+    font-size: 0.8rem;
+    padding: 0.4rem;
+    border: 1px solid #999999;
+    vertical-align: middle;
+  }
+  .table-striped tbody tr:nth-of-type(odd) {
+    background-color: #F9FAFB;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .form-label {
+    font-size: 0.9rem;
+    color: #003087;
+  }
+  .form-control, .form-select {
+    font-size: 0.85rem;
+  }
+  .btn {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.8rem;
+  }
+  .container {
+    max-width: 1200px;
+    margin: 2rem auto;
+  }
+  hr.header-line {
+    border: 0;
+    border-top: 2px solid #003087;
+    margin: 0.5rem 0;
+  }
+  hr.subheader-line {
+    border: 0;
+    border-top: 1px solid #003087;
+    margin: 0.5rem 0 1.5rem;
+  }
+  .print-date {
+    font-size: 9pt;
+    color: #333333;
+    text-align: right;
+    margin: 0.2in 0;
+  }
+/*new to add       */
+  @media print {
+  body {
+    margin: 0.2in; /* Reduced from 0.5in to minimize top/bottom space */
+    font-size: 10pt;
+    line-height: 1.2;
+  }
+  .container {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+  }
+  h3 {
+    font-size: 14pt;
+    margin: 0.1in 0; /* Reduced from 0.3in */
+  }
+  h5 {
+    font-size: 12pt;
+    margin: 0.1in 0; /* Ensure minimal margin for subtitle */
+  }
+  .table {
+    margin: 0; /* Ensure no top margin */
+    page-break-inside: auto; /* Changed from 'avoid' to allow table to break if needed */
+    page-break-before: avoid; /* Prevent table from starting on a new page */
+  }
+  .table thead th {
+    font-size: 9pt;
+    padding: 0.2in; 
+  }
+  .table tbody td {
+    font-size: 8pt;
+    padding: 0.15in; 
+  }
+  hr.header-line {
+    border-top: 1.5pt solid #003087;
+    margin: 0.1in 0; 
+  }
+  hr.subheader-line {
+    border-top: 1pt solid #003087;
+    margin: 0.1in 0; 
+  }
+  .btn, .form-select, form, .d-flex.justify-content-end {
+    display: none !important;
+  }
+  .table thead th:last-child,
+  .table tbody td:last-child {
+    display: none !important;
+  }
+  footer, .sidebar, .navbar, .menu-icon, .sidebar-toggle {
+    display: none !important;
+  }
+  #reportDataToPrint {
+    position: static;
+    width: 100%;
+  }
+  #reportDataToPrint, #reportDataToPrint * {
+    visibility: visible;
+  }
+  .print-date {
+    display: block !important;
+    margin: 0.1in 0; 
+}}
+</style>
+
+<div class="container mt-5">
+  <h3 class="mb-4 text-center">SUGAR CORPORATION OF UGANDA LTD LUGAZI</h3>
+  {% if filters.filter_type %}
+    {% with filter_type=filters.filter_type %}
+      {% if filter_type == 'date' %}
+        {% with filter_display='Date Range' %}
+          <h5 class="mb-4 text-center">Employee Sick Leave Days Report ({% if filters_applied %}{{ filters_applied }}{% endif %})</h5>
+        {% endwith %}
+      {% elif filter_type == 'year' %}
+        {% with filter_display='Year' %}
+          <h5 class="mb-4 text-center">Employee Sick Leave Days Report ({% if filters_applied %} {{ filters_applied }}{% endif %})</h5>
+        {% endwith %}
+      {% elif filter_type == 'month' %}
+        {% with filter_display='Month' %}
+          <h5 class="mb-4 text-center">Employee Sick Leave Days Report ({% if filters_applied %} {{ filters_applied }}{% endif %})</h5>
+        {% endwith %}
+      {% elif filter_type == 'code' %}
+        {% with filter_display='Employee Code' %}
+          <h5 class="mb-4 text-center">Employee Sick Leave Days Report ({% if filters_applied %} {{ filters_applied }}{% endif %})</h5>
+        {% endwith %}
+      {% elif filter_type == 'department' %}
+        {% with filter_display='Department' %}
+          <h5 class="mb-4 text-center">Employee Sick Leave Days Report ({% if filters_applied %}{{ filters_applied }}{% endif %})</h5>
+        {% endwith %}
+      {% else %}
+        <h5 class="mb-4 text-center">Employee Sick Leave Days Report</h5>
+      {% endif %}
+    {% endwith %}
+  {% else %}
+    <h5 class="mb-4 text-center">Employee Sick Leave Days Report</h5>
+  {% endif %}
+  <hr class="header-line">
+  <!-- <hr class="subheader-line"> -->
+
+  <!-- Filter Form -->
+  <form method="get" action="{% url 'report' %}" id="filterForm">
+    <div class="row g-3 align-items-end mb-3">
+      <div class="col-md-3">
+        <label for="filter_type" class="form-label">Search By</label>
+        <select name="filter_type" id="filter_type" class="form-select">
+          <option value="">-- Select --</option>
+          <option value="date" {% if filters.filter_type == 'date' %}selected{% endif %}>Date</option>
+          <option value="year" {% if filters.filter_type == 'year' %}selected{% endif %}>Year</option>
+          <option value="month" {% if filters.filter_type == 'month' %}selected{% endif %}>Month</option>
+          <option value="code" {% if filters.filter_type == 'code' %}selected{% endif %}>Employee Code</option>
+          <option value="department" {% if filters.filter_type == 'department' %}selected{% endif %}>Department</option>
+        </select>
+      </div>
+      <div class="col-md-3" id="filter_value_text_container" style="display:none;">
+        <label for="filter_value_text" id="filter_value_text_label" class="form-label">Enter Value</label>
+        <input type="text" name="filter_value" id="filter_value_text" class="form-control"
+               value="{% if filters.filter_type == 'code' or filters.filter_type == 'department' %}{{ filters.filter_value|default:'' }}{% endif %}">
+      </div>
+      <div class="col-md-3" id="filter_value_date_container" style="display:none;">
+        <label for="from_date" class="form-label">From Date</label>
+        <input type="date" name="from_date" id="from_date" class="form-control"
+               value="{% if filters.filter_type == 'date' %}{{ filters.from_date|default:'' }}{% endif %}">
+      </div>
+      <div class="col-md-3" id="filter_value_date_container_to" style="display:none;">
+        <label for="to_date" class="form-label">To Date</label>
+        <input type="date" name="to_date" id="to_date" class="form-control"
+               value="{% if filters.filter_type == 'date' %}{{ filters.to_date|default:'' }}{% endif %}">
+      </div>
+      <div class="col-md-3" id="filter_value_year_container" style="display:none;">
+        <label for="filter_value_year" class="form-label">Select Year</label>
+        <select name="filter_value" id="filter_value_year" class="form-select">
+          <option value="">-- Select Year --</option>
+          {% for year_val in years %}
+            <option value="{{ year_val }}" {% if filters.filter_type == 'year' and filters.filter_value|stringformat:"s" == year_val|stringformat:"s" %}selected{% endif %}>{{ year_val }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3" id="filter_value_month_container" style="display:none;">
+        <label for="filter_value_month" class="form-label">Select Month</label>
+        <select name="filter_value" id="filter_value_month" class="form-select">
+          <option value="">-- Select Month --</option>
+          <option value="1" {% if filters.filter_type == 'month' and filters.filter_value == '1' %}selected{% endif %}>January</option>
+          <option value="2" {% if filters.filter_type == 'month' and filters.filter_value == '2' %}selected{% endif %}>February</option>
+          <option value="3" {% if filters.filter_type == 'month' and filters.filter_value == '3' %}selected{% endif %}>March</option>
+          <option value="4" {% if filters.filter_type == 'month' and filters.filter_value == '4' %}selected{% endif %}>April</option>
+          <option value="5" {% if filters.filter_type == 'month' and filters.filter_value == '5' %}selected{% endif %}>May</option>
+          <option value="6" {% if filters.filter_type == 'month' and filters.filter_value == '6' %}selected{% endif %}>June</option>
+          <option value="7" {% if filters.filter_type == 'month' and filters.filter_value == '7' %}selected{% endif %}>July</option>
+          <option value="8" {% if filters.filter_type == 'month' and filters.filter_value == '8' %}selected{% endif %}>August</option>
+          <option value="9" {% if filters.filter_type == 'month' and filters.filter_value == '9' %}selected{% endif %}>September</option>
+          <option value="10" {% if filters.filter_type == 'month' and filters.filter_value == '10' %}selected{% endif %}>October</option>
+          <option value="11" {% if filters.filter_type == 'month' and filters.filter_value == '11' %}selected{% endif %}>November</option>
+          <option value="12" {% if filters.filter_type == 'month' and filters.filter_value == '12' %}selected{% endif %}>December</option>
+        </select>
+      </div>
+      <div class="col-md-3 align-self-end">
+        <button class="btn btn-primary w-100" type="submit">Search</button>
+      </div>
+    </div>
+    <input type="hidden" name="export_to" id="export_to_field" value="">
+  </form>
+
+  <!-- Export Buttons -->
+  <div class="d-flex justify-content-end mb-3">
+    <a href="?filter_type={{ filters.filter_type|urlencode }}&filter_value={{ filters.filter_value|urlencode }}&from_date={{ filters.from_date|urlencode }}&to_date={{ filters.to_date|urlencode }}&export_to=pdf&grouped=true" class="btn btn-danger me-2" target="_blank">
+      <i class="bi bi-file-earmark-pdf-fill"></i> Export to PDF
+    </a>
+    <a href="?filter_type={{ filters.filter_type|urlencode }}&filter_value={{ filters.filter_value|urlencode }}&from_date={{ filters.from_date|urlencode }}&to_date={{ filters.to_date|urlencode }}&export_to=excel&grouped=true" class="btn btn-success me-2">
+      <i class="bi bi-file-earmark-excel-fill"></i> Export to Excel
+    </a>
+    <button class="btn btn-info" onclick="printReportData();">
+      <i class="bi bi-printer-fill"></i> Print Report
+    </button>
+  </div>
+
+  <div id="reportDataToPrint">
+    {% if not error %}
+      {% if sickleaves %}
+        <div class="mt-4 table-responsive">
+          <table class="table table-bordered table-striped table-hover">
+            <thead class="table-dark">
+              <tr>
+                <th scope="col">No</th>
+                <th scope="col">Employee Code</th>
+                <th scope="col">Name</th>
+                <th scope="col">Department</th>
+                <th scope="col">Days Taken</th>
+                <th scope="col">Balance days</th>
+               
+                <th scope="col" class="Actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for leave in sickleaves %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>{{ leave.employee.employee_code|default:'N/A' }}</td>
+                  <td>{{ leave.employee.employee_name|default:'N/A' }}</td>
+                  <td>{{ leave.employee.department|default:'N/A' }}</td>
+                  <td>{{ leave.total_days }}</td>
+                  <td>{{ leave.day_balance|default:'N/A' }}</td>
+                  
+                  <td class="Actions">
+                    {% if leave.first_leave_pk %}
+                      <a href="{% url 'export_single_leave_pdf' leave.first_leave_pk %}" class="btn btn-outline-info btn-sm" target="_blank">
+                        <i class="bi bi-file-earmark-pdf"></i> Single PDF
+                      </a>
+                    {% else %}
+                      <span class="text-muted" title="No specific leave record available for single PDF export in this group.">PDF N/A</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% elif query_performed %}
+        <p class="mt-4 text-center">No records found for your search.</p>
+      {% endif %}
+    {% endif %}
+  </div>
+
+  <div class="print-date" style="display: none;">
+    <hr class="subheader-line">
+    <p>{{ 'now'|date:"F d, Y" }}</p>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const filterTypeSelect = document.getElementById('filter_type');
+  const textInputContainer = document.getElementById('filter_value_text_container');
+  const textInput = document.getElementById('filter_value_text');
+  const textInputLabel = document.getElementById('filter_value_text_label');
+  const fromDateContainer = document.getElementById('filter_value_date_container');
+  const fromDateInput = document.getElementById('from_date');
+  const toDateContainer = document.getElementById('filter_value_date_container_to');
+  const toDateInput = document.getElementById('to_date');
+  const yearInputContainer = document.getElementById('filter_value_year_container');
+  const yearInput = document.getElementById('filter_value_year');
+  const monthInputContainer = document.getElementById('filter_value_month_container');
+  const monthInput = document.getElementById('filter_value_month');
+
+  function hideAll() {
+    textInputContainer.style.display = 'none';
+    fromDateContainer.style.display = 'none';
+    toDateContainer.style.display = 'none';
+    yearInputContainer.style.display = 'none';
+    monthInputContainer.style.display = 'none';
+    textInput.name = '';
+    fromDateInput.name = '';
+    toDateInput.name = '';
+    yearInput.name = '';
+    monthInput.name = '';
+  }
+
+  function updateActiveInput() {
+    const selectedType = filterTypeSelect.value;
+    hideAll();
+    if (selectedType === 'code') {
+      textInputContainer.style.display = 'block';
+      textInputLabel.textContent = 'Enter Employee Code';
+      textInput.name = 'filter_value';
+    } else if (selectedType === 'department') {
+      textInputContainer.style.display = 'block';
+      textInputLabel.textContent = 'Enter Department';
+      textInput.name = 'filter_value';
+    } else if (selectedType === 'year') {
+      yearInputContainer.style.display = 'block';
+      yearInput.name = 'filter_value';
+    } else if (selectedType === 'month') {
+      monthInputContainer.style.display = 'block';
+      monthInput.name = 'filter_value';
+    } else if (selectedType === 'date') {
+      fromDateContainer.style.display = 'block';
+      toDateContainer.style.display = 'block';
+      fromDateInput.name = 'from_date';
+      toDateInput.name = 'to_date';
+    }
+  }
+
+  updateActiveInput();
+  filterTypeSelect.addEventListener('change', updateActiveInput);
+});
+
+/////new to add
+function printReportData() {
+  const printContents = document.getElementById("reportDataToPrint").innerHTML;
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  let reportTitle = "Employee Sick Leave Days Report";
+  {% if filters.filter_type %}
+    {% if filters.filter_type == 'date' %}
+      reportTitle += " ({% if filters_applied %}{{ filters_applied }}{% endif %})";
+    {% elif filters.filter_type == 'year' %}
+      reportTitle += " ({% if filters_applied %}{{ filters_applied }}{% endif %})";
+    {% elif filters.filter_type == 'month' %}
+      reportTitle += " ({% if filters_applied %}{{ filters_applied }}{% endif %})";
+    {% elif filters.filter_type == 'code' %}
+      reportTitle += " ({% if filters_applied %}{{ filters_applied }}{% endif %})";
+    {% elif filters.filter_type == 'department' %}
+      reportTitle += " ({% if filters_applied %} {{ filters_applied }}{% endif %})";
+    {% endif %}
+  {% endif %}
+  const popupWin = window.open('', '_blank', 'height=600,width=800');
+  popupWin.document.open();
+  popupWin.document.write(`
+    <html>
+      <head>
+        <title>Employee Sick Leave Register</title>
+        <style>
+          body {
+            margin: 0.2in;
+            font-family: 'Times New Roman', Times, serif;
+            color: #333333;
+            font-size: 10pt;
+            line-height: 1.2;
+          }
+          h3 {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #003087;
+            text-align: center;
+            margin: 0.1in 0;
+          }
+          h5 {
+            font-size: 12pt;
+            color: #003087;
+            text-align: center;
+            margin: 0.1in 0;
+          }
+          .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+            page-break-inside: auto;
+            page-break-before: avoid;
+          }
+          .table thead th {
+            background-color: #E8F0FE;
+            color: #003087;
+            font-weight: bold;
+            font-size: 9pt;
+            padding: 0.2in;
+            border: 1pt solid #999999;
+            text-align: center;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .table tbody td {
+            font-size: 8pt;
+            padding: 0.15in;
+            border: 1pt solid #999999;
+            vertical-align: middle;
+          }
+          .table-striped tbody tr:nth-of-type(odd) {
+            background-color: #F9FAFB;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .text-center {
+            text-align: center !important;
+          }
+          hr.header-line {
+            border: 0;
+            border-top: 1.5pt solid #003087;
+            margin: 0.1in 0;
+          }
+          hr.subheader-line {
+            border: 0;
+            border-top: 1pt solid #003087;
+            margin: 0.1in 0;
+          }
+          .print-date {
+            font-size: 9pt;
+            color: #333333;
+            text-align: right;
+            margin: 0.1in 0;
+          }
+          .table thead th:last-child,
+          .table tbody td:last-child {
+            display: none !important;
+          }
+          footer, .sidebar, .navbar, .menu-icon, .sidebar-toggle {
+            display: none !important;
+          }
+        </style>
+      </head>
+      <body onload="window.print(); setTimeout(window.close, 0);">
+        <hr class="header-line">
+        <h3>SUGAR CORPORATION OF UGANDA LTD LUGAZI</h3>
+        <h5>${reportTitle}</h5>
+        <hr class="subheader-line">
+        ${printContents}
+        <div class="print-date">
+          <hr class="subheader-line">
+          <p>${formattedDate}</p>
+        </div>
+      </body>
+    </html>
+  `);
+  popupWin.document.close();
+}
+</script>
+
+{% endblock %}

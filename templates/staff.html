@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+  <!-- Search Employee Section -->
+  <h2 class="mb-4 text-center">Manage Employee Sick Leave</h2>
+  <div class="card mb-4">
+    <div class="card-header">Search Employee</div>
+    <div class="card-body">
+      <form method="post" action="{% url 'search_employee' %}"> {# Ensure 'search_employee' is your URL name #}
+        {% csrf_token %}
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="form-group mb-0">
+              <label for="search_type_select" class="form-label">Search by</label>
+              <select class="form-select" id="search_type_select" name="search_type">
+                <option value="code" {% if search_type_selected == 'code' %}selected{% endif %}>Employee Code</option>
+                <!-- <option value="name" {% if search_type_selected == 'name' %}selected{% endif %}>Employee Name</option> -->
+              </select>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group mb-0">
+              <label for="search_term_input" class="form-label">Search Term</label>
+              <input type="text" id="search_term_input" name="search_term" class="form-control" value="{{ search_term_input }}" placeholder="Enter Employee Code" required>
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+      </form>
+    </div>
+  </div>
+
+  {% if success_message %}
+  <div id="autoDismissSuccessAlert" class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+    {{ success_message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+  {% endif %}
+  {% if error_message %}
+  <div id="autoDismissErrorAlert" class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+    {{ error_message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+  {% endif %}
+
+  <!-- Employee Information Section -->
+  {% if employee_details %}
+  <div class="card mt-4">
+    <div class="card-header">
+      Update Sick Leave for: <strong>{{ employee_details.employee_name }} ({{ employee_details.employee_code }})</strong>
+    </div>
+    <div class="card-body">
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <p><strong>Employee Code:</strong> {{ employee_details.employee_code }}</p>
+          <p><strong>Name:</strong> {{ employee_details.employee_name }}</p>
+        </div>
+        <div class="col-md-6">
+          <p><strong>Department:</strong> {{ employee_details.department }}</p>
+          <p><strong>Current Total Sick Leave Days:</strong> <strong id="current_total_days_display">{{ employee_details.current_total_days }}</strong></p>
+        </div>
+      </div>
+      
+      {% comment %} Displaying last entered additional days and reason - this is for information {% endcomment %}
+      {% if employee_details.additional_sick_leave_days is not None or employee_details.reason %}
+      <div class="alert alert-info py-2">
+          <small>
+            <strong>Last Update Applied:</strong>
+            {% if employee_details.additional_sick_leave_days is not None %}
+                Additional Days: {{ employee_details.additional_sick_leave_days }}.
+            {% endif %}
+            {% if employee_details.reason %}
+                Reason: {{ employee_details.reason }}
+            {% endif %}
+          </small>
+      </div>
+      {% endif %}
+
+      <hr>
+      <!-- Form to update additional sick leave days -->
+      <form method="post" action="{% url 'search_employee' %}">
+        {% csrf_token %}
+        <h5 class="mb-3">Enter New Adjustment</h5>
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="id_additional_sick_leave_days_input" class="form-label">Add/Subtract Sick Leave Days</label>
+              <input type="number" class="form-control" id="id_additional_sick_leave_days_input" name="additional_sick_leave_days" 
+                     value="{{ additional_sick_leave_input }}" placeholder="e.g., 5 or -2" required>
+              <small class="form-text text-muted">Use a negative number to subtract days.</small>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="reason_input_field" class="form-label">Reason for this Adjustment</label>
+              <input type="text" class="form-control" name="reason" id="reason_input_field" value="{{ reason_input }}" placeholder="e.g., Annual top-up, Correction">
+            </div>
+          </div>
+        </div>
+        <!-- Hidden inputs to persist search data when submitting this sub-form -->
+        <input type="hidden" name="search_type" value="{{ search_type_selected }}">
+        <input type="hidden" name="search_term" value="{{ search_term_input }}"> 
+        {# This ensures that if the update fails and page reloads, the employee context is maintained #}
+        
+        <button class="btn btn-info" type="submit">Apply Adjustment</button>
+      </form>
+    </div>
+  </div>
+  {% elif request.method == "POST" and search_term_input and not error_message and not success_message %}
+    {% comment %} This case is if a search was performed, but no employee found and no other error/success was set yet {% endcomment %}
+    {% comment %} <div class="alert alert-warning mt-3">No employee found matching your search criteria.</div> {% endcomment %}
+    {# The error_message from the view will cover this explicitly #}
+  {% endif %}
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+      function autoDismissAlert(alertId, duration) {
+        const alertElement = document.getElementById(alertId);
+        if (alertElement) {
+          if (typeof bootstrap !== 'undefined' && typeof bootstrap.Alert !== 'undefined') {
+            const bsAlert = bootstrap.Alert.getOrCreateInstance(alertElement);
+            setTimeout(function() {
+              if (bsAlert) { bsAlert.close(); }
+            }, duration);
+          } else {
+            setTimeout(function() { alertElement.style.display = 'none'; }, duration);
+          }
+        }
+      }
+      autoDismissAlert('autoDismissSuccessAlert', 3000);
+      autoDismissAlert('autoDismissErrorAlert', 5000);
+    });
+</script>
+
+{% endblock %}

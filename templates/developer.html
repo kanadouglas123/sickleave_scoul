@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h2 class="text-center">UPLOAD EXCEL FILE</h2>
+
+
+<form method="POST" enctype="multipart/form-data" action="{% url 'upload_excel' %}">
+  {% csrf_token %}
+  <div class="d-flex p-2" id="div1">
+    <div class="me-2">
+      <label for="excel" class="form-label">Upload Excel</label>
+      <input type="file" class="form-control" id="excel" name="excel_file1" required accept=".xlsx,.xls">
+    </div>
+    <div class="align-self-end">
+      <button class="btn btn-info" type="submit" id="loadButton">Upload</button>
+    </div>
+  </div>
+</form>
+{% endblock %}

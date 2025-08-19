@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+  #button {
+    margin-left: 2px;
+  }
+</style>
+
+<div class="container mt-5">
+  <h1 class="mb-4 text-center">Please fill in the form</h1>
+
+  <!-- Alerts Section -->
+  {% if message or error %}
+    <div class="d-flex flex-row mb-3">
+      {% if message %}
+        <div id="autoDismissSuccessAlert" class="alert alert-success alert-dismissible fade show me-2" role="alert" style="flex: 1;">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endif %}
+      {% if error %}
+        <div id="autoDismissErrorAlert" class="alert alert-danger alert-dismissible fade show" role="alert" style="flex: 1;">
+          {{ error }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <form id="employeeForm" method="POST" action="{% url 'master_submit' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Search Section -->
+        <div class="d-flex p-1">
+          <select id="search_type" name="search_type" class="form-select me-2" style="max-width: 120px;">
+            <option value="code">Code</option>
+          </select>
+          <input type="text" class="form-control me-2" id="search_term" required placeholder="Enter code ">
+          <button class="btn btn-info" type="button" id="loadButton">Get Details</button>
+        </div>
+
+        <!-- Employee Info Section -->
+        <div class="mb-3">
+          <label class="form-label">Employee Code</label>
+          <input type="text" class="form-control" id="employee_code" name="employee_code" value="{{ employee_code|default:'' }}" readonly required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Employee Name</label>
+          <input type="text" class="form-control" id="employee_name" name="employee_name" value="{{ employee_name|default:'' }}" readonly required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Department</label>
+          <input type="text" class="form-control" id="dept" name="department" value="{{ department|default:'' }}" readonly required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Designation</label>
+          <input type="text" class="form-control" id="designation" name="designation" value="{{ designation|default:'' }}" readonly required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Total sick leave days Assigned</label>
+          <input type="number" class="form-control" id="id_remaining_sick_leave" name="remaining_sick_leave" value="{{ current_total_days|default:'30' }}" readonly required>
+        </div>
+
+        <!-- Dates Section -->
+        <div class="d-flex">
+          <div class="me-2">
+            <label class="form-label">Sick leave start date</label>
+            <input type="date" class="form-control" id="start_date" name="start_date" required>
+          </div>
+          <div>
+            <label class="form-label">Sick leave end date</label>
+            <input type="date" class="form-control" id="end_date" name="end_date" required>
+          </div>
+        </div>
+
+        <div class="d-flex p-1">
+          <div class="me-2">
+            <label class="form-label">Days required</label>
+            <input type="text" class="form-control" id="days_required" name="days_required" readonly>
+          </div>
+          <div>
+            <label class="form-label">Balance days</label>
+            <input type="text" class="form-control" id="balance_days" name="balance_days" readonly>
+          </div>
+        </div>
+
+        <!-- Approval Section -->
+        <div class="d-flex p-1">
+          <div class="me-2">
+            <label class="form-label">Issued By</label>
+            <input type="text" class="form-control" value="{{ user.username }}" readonly>
+          </div>
+          <div>
+            <label class="form-label">Approved By</label>
+            <select class="form-select" name="approved_by" required id="approved_by_dropdown">
+              <option value="" selected>Select a doctor</option>
+            </select>
+            {% if errors.approved_by %}
+              <div class="text-danger">{{ errors.approved_by }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Extra Info Section -->
+        <div class="mb-3">
+          <label class="form-label">Patient Service</label>
+          <select class="form-select" name="patient_service">
+            <option value="In patient">In patient</option>
+            <option value="Out patient">Out patient</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Gender</label>
+          <select class="form-select" name="gender">
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Doctor Remarks</label>
+          <input type="text" class="form-control" name="doctor_remarks" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Recommendation</label>
+          <input type="text" class="form-control" name="recommendation" required>
+        </div>
+
+        <!-- Document Upload Section -->
+        <div class="mb-3">
+          <label for="document_upload" class="form-label">Upload Medical Document (Image/Scanned Copy)</label>
+          <input type="file" class="form-control" id="document_upload" name="document_upload" accept="image/*,.pdf">
+        </div>
+
+        <!-- Submit Section -->
+        <div class="text-center mb-3">
+          <button type="submit" id="submit_button" class="btn btn-info">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript Section -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Alert Auto-Dismiss Function
+    function autoDismissAlert(alertId, duration) {
+      const alertElement = document.getElementById(alertId);
+      if (alertElement) {
+        if (typeof bootstrap !== 'undefined' && typeof bootstrap.Alert !== 'undefined') {
+          const bsAlert = bootstrap.Alert.getOrCreateInstance(alertElement);
+          setTimeout(() => bsAlert.close(), duration);
+        } else {
+          console.warn('Bootstrap Alert component not found. Alert will be hidden directly for ID: ' + alertId);
+          setTimeout(() => alertElement.style.display = 'none', duration);
+        }
+      }
+    }
+
+    autoDismissAlert('autoDismissSuccessAlert', 1500);
+    autoDismissAlert('autoDismissErrorAlert', 1500);
+
+    // Load Button Event Listener
+    document.getElementById('loadButton').addEventListener('click', function() {
+      const searchType = document.getElementById('search_type').value;
+      const searchTerm = document.getElementById('search_term').value;
+
+      if (!searchTerm) return alert('Enter employee code or name.');
+
+      fetch(`/fetch-employee/?search_type=${searchType}&search_term=${searchTerm}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) return alert(data.error);
+          document.getElementById('employee_code').value = data.employee_code;
+          document.getElementById('employee_name').value = data.employee_name;
+          document.getElementById('dept').value = data.department;
+          document.getElementById('designation').value = data.designation;
+          document.getElementById('id_remaining_sick_leave').value = data.current_total_days;
+
+          // Populate the approved_by dropdown with doctors
+          const dropdown = document.getElementById('approved_by_dropdown');
+          dropdown.innerHTML = '<option value="" selected>Select a doctor</option>'; // Clear and set default
+          data.doctors.forEach(doctor => {
+            const option = document.createElement('option');
+            option.value = doctor.id;
+            option.text = doctor.name;
+            dropdown.appendChild(option);
+          });
+        })
+        .catch(error => console.error('Error fetching data:', error));
+    });
+
+    // Date Calculation Function
+    const startInput = document.getElementById('start_date');
+    const endInput = document.getElementById('end_date');
+    const daysInput = document.getElementById('days_required');
+    const balanceDaysInput = document.getElementById('balance_days');
+    const leaveBalanceInput = document.getElementById('id_remaining_sick_leave');
+    const submitBtn = document.getElementById('submit_button');
+
+    function calculateDays() {
+      const start = new Date(startInput.value);
+      const end = new Date(endInput.value);
+
+      if (!isNaN(start) && !isNaN(end) && end >= start) {
+        const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+        daysInput.value = diff;
+        const balance = parseInt(leaveBalanceInput.value);
+        balanceDaysInput.value = balance - diff >= 0 ? balance - diff : 0;
+
+        if (diff > balance) {
+          submitBtn.disabled = true;
+          submitBtn.innerText = 'Exceeded Leave Days';
+          submitBtn.classList.remove('btn-info');
+          submitBtn.classList.add('btn-danger');
+        } else {
+          submitBtn.disabled = false;
+          submitBtn.innerText = 'Submit';
+          submitBtn.classList.remove('btn-danger');
+          submitBtn.classList.add('btn-info');
+        }
+      } else {
+        daysInput.value = '';
+        balanceDaysInput.value = '';
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Submit';
+      }
+    }
+
+    startInput.addEventListener('input', calculateDays);
+    endInput.addEventListener('input', calculateDays);
+  });
+</script>
+
+{% endblock %}
